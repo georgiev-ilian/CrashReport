@@ -20,9 +20,9 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
     @Override
     public void uncaughtException(Thread thread, Throwable ex) {
         ReportDataCollector collector = new ReportDataCollector();
-        collector.collect(context);
+        collector.collect(context, ex);
 
-        Log.d("MyHandler", "uncaughtException: " + collector.toString());
+        collector.printToLogcat();
 
         new ToastThread();
 

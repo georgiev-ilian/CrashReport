@@ -24,7 +24,7 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
-            // ignore
+            // ignore the exception
         }
 
         Log.e("MyUncaught", "uncaughtException: " + ex.getMessage(), ex);

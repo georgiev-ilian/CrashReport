@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.2"
 
     defaultConfig {
-        applicationId "crashreport.prototype.android.com.crashreport"
+        applicationId "my.crashreport"
         minSdkVersion 15
         targetSdkVersion 23
         versionCode 1

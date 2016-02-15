@@ -3,13 +3,13 @@
     package="crashreport.prototype.android.com.crashreport">
 
     <application
-        android:name=".MyApplication"
+        android:name="crashreport.prototype.android.com.my.crashreport.MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         >
-        <activity android:name=".MainActivity">
+        <activity android:name="crashreport.prototype.android.com.my.crashreport.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

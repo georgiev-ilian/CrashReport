@@ -1,4 +1,4 @@
-package crashreport.prototype.android.com.crashreport;
+package my.crashreport;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;

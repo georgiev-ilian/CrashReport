@@ -5,10 +5,16 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+
 /**
  * Created by Ilian Georgiev.
  */
 public class ReportDataCollector {
+
+    public static final String DATE_TIME_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
 
     private final String[] data = new String[DATA_COUNT];
 
@@ -18,7 +24,8 @@ public class ReportDataCollector {
     private static final int PACKAGE_NAME_INDEX = 3;
     private static final int APP_VERSION_CODE = 4;
     private static final int APP_VERSION_NAME = 5;
-    private static final int DATA_COUNT = 6;
+    private static final int USER_CRASH_DATE = 6;
+    private static final int DATA_COUNT = 7;
 
     public void collect(Context context) {
         data[PHONE_MODEL_INDEX] = Build.MODEL;
@@ -42,6 +49,15 @@ public class ReportDataCollector {
             }
         }
 
+        data[USER_CRASH_DATE] = getTimeString();
+
+    }
+
+    private String getTimeString() {
+        SimpleDateFormat format = new SimpleDateFormat(DATE_TIME_FORMAT_STRING, Locale.ENGLISH);
+        Calendar calendar = Calendar.getInstance();
+
+        return format.format(calendar.get(Calendar.SECOND));
     }
 
     @Override

@@ -10,16 +10,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Locale;
 
 /**
  * Created by Ilian Georgiev.
  */
 public class ReportDataCollector {
-
-    public static final String DATE_TIME_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ";
 
     private final String[] data = new String[DATA_COUNT];
 
@@ -29,7 +24,7 @@ public class ReportDataCollector {
     private static final int PACKAGE_NAME_INDEX = 3;
     private static final int APP_VERSION_CODE = 4;
     private static final int APP_VERSION_NAME = 5;
-    private static final int USER_CRASH_DATE = 6;
+    private static final int CRASH_TIME = 6;
     private static final int STACK_TRACE = 7;
     private static final int STACK_TRACE_HASH = 8;
     private static final int PRODUCT = 9;
@@ -58,19 +53,12 @@ public class ReportDataCollector {
             }
         }
 
-        data[USER_CRASH_DATE] = getTimeString();
+        data[CRASH_TIME] = String.valueOf(System.currentTimeMillis());
 
         data[STACK_TRACE] = getStackTrace(throwable);
         data[STACK_TRACE_HASH] = getStackTraceHash(throwable);
 
         data[PRODUCT] = Build.PRODUCT;
-    }
-
-    private String getTimeString() {
-        SimpleDateFormat format = new SimpleDateFormat(DATE_TIME_FORMAT_STRING, Locale.ENGLISH);
-        Calendar calendar = Calendar.getInstance();
-
-        return format.format(calendar.get(Calendar.SECOND));
     }
 
     private String getStackTrace(Throwable th) {

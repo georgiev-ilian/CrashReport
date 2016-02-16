@@ -32,7 +32,8 @@ public class ReportDataCollector {
     private static final int USER_CRASH_DATE = 6;
     private static final int STACK_TRACE = 7;
     private static final int STACK_TRACE_HASH = 8;
-    private static final int DATA_COUNT = 9;
+    private static final int PRODUCT = 9;
+    private static final int DATA_COUNT = 10;
 
 
     public void collect(Context context, Throwable throwable) {
@@ -61,6 +62,8 @@ public class ReportDataCollector {
 
         data[STACK_TRACE] = getStackTrace(throwable);
         data[STACK_TRACE_HASH] = getStackTraceHash(throwable);
+
+        data[PRODUCT] = Build.PRODUCT;
     }
 
     private String getTimeString() {

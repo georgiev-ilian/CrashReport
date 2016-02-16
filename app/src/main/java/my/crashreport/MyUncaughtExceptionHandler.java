@@ -13,14 +13,17 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
 
     private final Context context;
 
+    private final long appStartTime;
+
     public MyUncaughtExceptionHandler(Context context) {
         this.context = context;
+        appStartTime = System.currentTimeMillis();
     }
 
     @Override
     public void uncaughtException(Thread thread, Throwable ex) {
         ReportDataCollector collector = new ReportDataCollector();
-        collector.collect(context, ex);
+        collector.collect(context, ex, appStartTime);
 
         collector.printToLogcat();
 

@@ -29,7 +29,8 @@ public class ReportDataCollector {
     private static final int STACK_TRACE = 8;
     private static final int STACK_TRACE_HASH = 9;
     private static final int PRODUCT = 10;
-    private static final int DATA_COUNT = 11;
+    private static final int BRAND = 11;
+    private static final int DATA_COUNT = 12;
 
 
     public void collect(Context context, Throwable throwable, long appStartTime) {
@@ -61,6 +62,7 @@ public class ReportDataCollector {
         data[STACK_TRACE_HASH] = getStackTraceHash(throwable);
 
         data[PRODUCT] = Build.PRODUCT;
+        data[BRAND] = Build.BRAND;
     }
 
     private String getStackTrace(Throwable th) {

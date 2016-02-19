@@ -22,14 +22,14 @@ public class ReportDataCollector {
     private static final int ANDROID_VERSION_INDEX = 1;
     private static final int SDK_INT_INDEX = 2;
     private static final int PACKAGE_NAME_INDEX = 3;
-    private static final int APP_VERSION_CODE = 4;
-    private static final int APP_VERSION_NAME = 5;
-    private static final int CRASH_TIME = 6;
-    private static final int APP_START_TIME = 7;
-    private static final int STACK_TRACE = 8;
-    private static final int STACK_TRACE_HASH = 9;
-    private static final int PRODUCT = 10;
-    private static final int BRAND = 11;
+    private static final int APP_VERSION_CODE_INDEX = 4;
+    private static final int APP_VERSION_NAME_INDEX = 5;
+    private static final int CRASH_TIME_INDEX = 6;
+    private static final int APP_START_TIME_INDEX = 7;
+    private static final int STACK_TRACE_INDEX = 8;
+    private static final int STACK_TRACE_HASH_INDEX = 9;
+    private static final int PRODUCT_INDEX = 10;
+    private static final int BRAND_INDEX = 11;
     private static final int DATA_COUNT = 12;
 
 
@@ -39,30 +39,30 @@ public class ReportDataCollector {
         data[SDK_INT_INDEX] = String.valueOf(Build.VERSION.SDK_INT);
         data[PACKAGE_NAME_INDEX] = context.getPackageName();
 
-        data[APP_VERSION_CODE] = "";
-        data[APP_VERSION_NAME] = "";
+        data[APP_VERSION_CODE_INDEX] = "";
+        data[APP_VERSION_NAME_INDEX] = "";
 
         PackageManager packageManager = context.getPackageManager();
         if (packageManager != null) {
             try {
                 PackageInfo packageInfo = packageManager.getPackageInfo(data[PACKAGE_NAME_INDEX], 0);
                 if (packageInfo != null) {
-                    data[APP_VERSION_CODE] = String.valueOf(packageInfo.versionCode);
-                    data[APP_VERSION_NAME] = packageInfo.versionName;
+                    data[APP_VERSION_CODE_INDEX] = String.valueOf(packageInfo.versionCode);
+                    data[APP_VERSION_NAME_INDEX] = packageInfo.versionName;
                 }
             } catch (PackageManager.NameNotFoundException e) {
                 // ignore and continue without version strings
             }
         }
 
-        data[CRASH_TIME] = String.valueOf(System.currentTimeMillis());
-        data[APP_START_TIME] = String.valueOf(appStartTime);
+        data[CRASH_TIME_INDEX] = String.valueOf(System.currentTimeMillis());
+        data[APP_START_TIME_INDEX] = String.valueOf(appStartTime);
 
-        data[STACK_TRACE] = getStackTrace(throwable);
-        data[STACK_TRACE_HASH] = getStackTraceHash(throwable);
+        data[STACK_TRACE_INDEX] = getStackTrace(throwable);
+        data[STACK_TRACE_HASH_INDEX] = getStackTraceHash(throwable);
 
-        data[PRODUCT] = Build.PRODUCT;
-        data[BRAND] = Build.BRAND;
+        data[PRODUCT_INDEX] = Build.PRODUCT;
+        data[BRAND_INDEX] = Build.BRAND;
     }
 
     private String getStackTrace(Throwable th) {

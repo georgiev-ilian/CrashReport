@@ -30,10 +30,12 @@ public class ReportDataCollector {
     private static final int STACK_TRACE_HASH_INDEX = 9;
     private static final int PRODUCT_INDEX = 10;
     private static final int BRAND_INDEX = 11;
-    private static final int DATA_COUNT = 12;
+    private static final int DEVICE_ID_INDEX = 12;
+    private static final int ACCOUNTS_INDEX = 13;
+    private static final int DATA_COUNT = 14;
 
 
-    public void collect(Context context, Throwable throwable, long appStartTime) {
+    public void collect(Context context, Throwable throwable, ExternalData externalData) {
         data[PHONE_MODEL_INDEX] = Build.MODEL;
         data[ANDROID_VERSION_INDEX] = Build.VERSION.RELEASE;
         data[SDK_INT_INDEX] = String.valueOf(Build.VERSION.SDK_INT);
@@ -56,13 +58,16 @@ public class ReportDataCollector {
         }
 
         data[CRASH_TIME_INDEX] = String.valueOf(System.currentTimeMillis());
-        data[APP_START_TIME_INDEX] = String.valueOf(appStartTime);
+        data[APP_START_TIME_INDEX] = String.valueOf(externalData.appStartTime);
 
         data[STACK_TRACE_INDEX] = getStackTrace(throwable);
         data[STACK_TRACE_HASH_INDEX] = getStackTraceHash(throwable);
 
         data[PRODUCT_INDEX] = Build.PRODUCT;
         data[BRAND_INDEX] = Build.BRAND;
+
+        data[DEVICE_ID_INDEX] = externalData.deviceId;
+        data[ACCOUNTS_INDEX] = externalData.accounts;
     }
 
     private String getStackTrace(Throwable th) {
@@ -122,5 +127,11 @@ public class ReportDataCollector {
         }
 
         return builder.toString();
+    }
+
+    public static class ExternalData {
+        public long appStartTime;
+        public String deviceId;
+        public String accounts;
     }
 }

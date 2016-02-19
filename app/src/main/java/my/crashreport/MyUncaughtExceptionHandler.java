@@ -23,7 +23,10 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
     @Override
     public void uncaughtException(Thread thread, Throwable ex) {
         ReportDataCollector collector = new ReportDataCollector();
-        collector.collect(context, ex, appStartTime);
+        ReportDataCollector.ExternalData externalData = new ReportDataCollector.ExternalData();
+        externalData.appStartTime = appStartTime;
+
+        collector.collect(context, ex, externalData);
 
         collector.printToLogcat();
 

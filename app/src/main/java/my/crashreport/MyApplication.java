@@ -13,9 +13,9 @@ public class MyApplication extends Application {
         Thread.setDefaultUncaughtExceptionHandler(
                 new MyUncaughtExceptionHandler(this, externalData, new Sender() {
                     @Override
-                    public void send(String filename, String content, Listener listener) {
+                    public boolean send(String content) {
                         Log.d("MyApplication", "send: " + content);
-                        listener.onReportSend(filename);
+                        return true;
                     }
                 }));
 

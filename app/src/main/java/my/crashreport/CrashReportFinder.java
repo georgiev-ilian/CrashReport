@@ -28,7 +28,7 @@ final class CrashReportFinder {
         }
 
         final File dir = context.getFilesDir();
-        Log.d("CrashReportFinder", "getCrashReportFiles: " + dir);
+
         if (dir == null) {
             // Application files directory does not exist!
             return new String[0];

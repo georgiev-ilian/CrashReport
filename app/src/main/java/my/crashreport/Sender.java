@@ -4,9 +4,11 @@ package my.crashreport;
  * Created by Ilian Georgiev.
  */
 public interface Sender {
-    interface Listener {
-        void onReportSend(String filename);
-    }
 
-    void send(String filename, String content, Listener listener);
+    /**
+     * Send the report to a repository.
+     * @param content The crash report content
+     * @return {@code true} is the report was sent successfully and {@code false} if not.
+     */
+    boolean send(String content);
 }

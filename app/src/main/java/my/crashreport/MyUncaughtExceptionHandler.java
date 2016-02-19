@@ -8,14 +8,6 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-
 /**
  * Created by Ilian Georgiev.
  */
@@ -23,7 +15,6 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
 
     public static final String REPORTFILE_EXTENSION = ".crashreport";
 
-    public static final int DEFAULT_BUFFER_SIZE_IN_BYTES = 8192;
 
     private final Context context;
 
@@ -51,19 +42,21 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
         JSONObject jsonObject = collector.collect(context, ex, externalData);
         String filename = getReportFilename();
 
-        store(jsonObject, filename);
+        CrashReportPersister crashReportPersister = new CrashReportPersister(context);
 
+        // Try to send all report that failed to be send
         String[] files = crashReportFinder.getCrashReportFiles();
         String content;
-        for (String fileStored :
-                files) {
-            content = load(fileStored);
-            sender.send(fileStored, content, new Sender.Listener() {
-                @Override
-                public void onReportSend(String filename) {
-                    Log.d("MyHandler", "onReportSend: " + filename);
-                }
-            });
+        for (String fileStored : files) {
+            content = crashReportPersister.load(fileStored);
+            if (sender.send(content)) {
+                context.deleteFile(fileStored);
+            }
+        }
+
+        // Try to send the latest report and if failed save it
+        if (!sender.send(jsonObject.toString())) {
+            crashReportPersister.store(jsonObject, filename);
         }
 
         new ToastThread();
@@ -74,78 +67,10 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
             // ignore
         }
 
-        Log.e("MyUncaught", "uncaughtException: " + ex.getMessage(), ex);
+        Log.e("MyUncaught", ex.getMessage(), ex);
 
         android.os.Process.killProcess(Process.myPid());
         System.exit(10);
-    }
-
-    private void store(JSONObject data, String fileName) {
-
-        OutputStream out = null;
-        OutputStreamWriter writer = null;
-        try {
-            out = context.openFileOutput(fileName, Context.MODE_PRIVATE);
-            writer = new OutputStreamWriter(out, "UTF-8");
-            writer.write(data.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (writer != null) {
-                    writer.close();
-                }
-
-                if (out != null) {
-                    out.close();
-                }
-
-            } catch (IOException e) {
-                // ignore
-            }
-        }
-    }
-
-    private String load(String filename) {
-
-        FileInputStream in = null;
-        String result = null;
-        BufferedInputStream bufferedInputStream = null;
-        BufferedReader bufferedReader = null;
-
-        try {
-            in = context.openFileInput(filename);
-
-            if (in == null) {
-                throw new IllegalArgumentException("Invalid crash report filename : " + filename);
-            }
-
-            bufferedInputStream = new BufferedInputStream(in, DEFAULT_BUFFER_SIZE_IN_BYTES);
-            bufferedReader = new BufferedReader(
-                    new InputStreamReader(bufferedInputStream, "UTF-8"));
-            result = bufferedReader.readLine();
-
-        } catch (IOException e) {
-            // ignore
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-
-                if (bufferedReader != null) {
-                    bufferedReader.close();
-                }
-
-                if (bufferedInputStream != null) {
-                    bufferedInputStream.close();
-                }
-            } catch (IOException e) {
-                // ignore
-            }
-        }
-
-        return result;
     }
 
     private String getReportFilename() {
@@ -164,18 +89,6 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
             Toast.makeText(context,
                     "An error occurred. Error report has been sent.", Toast.LENGTH_SHORT).show();
             Looper.loop();
-        }
-    }
-
-    private class SendThread implements Runnable {
-
-        public SendThread() {
-            new Thread(this).start();
-        }
-
-        @Override
-        public void run() {
-            String[] files = crashReportFinder.getCrashReportFiles();
         }
     }
 }

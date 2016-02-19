@@ -8,10 +8,16 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+
 /**
  * Created by Ilian Georgiev.
  */
 public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+
+    private static final String REPORTFILE_EXTENSION = ".crashreport";
 
     private final Context context;
 
@@ -29,6 +35,9 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
         ReportDataCollector collector = new ReportDataCollector();
 
         JSONObject jsonObject = collector.collect(context, ex, externalData);
+        String filename = getReportFilename();
+
+        store(jsonObject, filename);
 
         Log.d("MyHandler", jsonObject.toString());
 
@@ -44,6 +53,31 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
 
         android.os.Process.killProcess(Process.myPid());
         System.exit(10);
+    }
+
+    private void store(JSONObject data, String fileName) {
+
+        OutputStream out = null;
+        try {
+            out = context.openFileOutput(fileName, Context.MODE_PRIVATE);
+            final OutputStreamWriter writer = new OutputStreamWriter(out, "UTF-8");
+            writer.write(data.toString());
+            writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    // ignore
+                }
+            }
+        }
+    }
+
+    private String getReportFilename() {
+        return String.valueOf(this.externalData.appStartTime) + REPORTFILE_EXTENSION;
     }
 
     private class ToastThread implements Runnable {

@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,8 +17,6 @@ import java.io.Writer;
  * Created by Ilian Georgiev.
  */
 public class ReportDataCollector {
-
-    private final String[] data = new String[DATA_COUNT];
 
     private static final int PHONE_MODEL_INDEX = 0;
     private static final int ANDROID_VERSION_INDEX = 1;
@@ -32,42 +32,58 @@ public class ReportDataCollector {
     private static final int BRAND_INDEX = 11;
     private static final int DEVICE_ID_INDEX = 12;
     private static final int ACCOUNTS_INDEX = 13;
-    private static final int DATA_COUNT = 14;
 
 
-    public void collect(Context context, Throwable throwable, ExternalData externalData) {
-        data[PHONE_MODEL_INDEX] = Build.MODEL;
-        data[ANDROID_VERSION_INDEX] = Build.VERSION.RELEASE;
-        data[SDK_INT_INDEX] = String.valueOf(Build.VERSION.SDK_INT);
-        data[PACKAGE_NAME_INDEX] = context.getPackageName();
+    public JSONObject collect(Context context, Throwable throwable, ExternalData externalData) {
+        JSONObject jsonObj = null;
 
-        data[APP_VERSION_CODE_INDEX] = "";
-        data[APP_VERSION_NAME_INDEX] = "";
+        try {
+            jsonObj = new JSONObject();
 
-        PackageManager packageManager = context.getPackageManager();
-        if (packageManager != null) {
-            try {
-                PackageInfo packageInfo = packageManager.getPackageInfo(data[PACKAGE_NAME_INDEX], 0);
-                if (packageInfo != null) {
-                    data[APP_VERSION_CODE_INDEX] = String.valueOf(packageInfo.versionCode);
-                    data[APP_VERSION_NAME_INDEX] = packageInfo.versionName;
+            String packageName = context.getPackageName();
+
+            jsonObj.put(String.valueOf(PHONE_MODEL_INDEX), Build.MODEL);
+            jsonObj.put(String.valueOf(ANDROID_VERSION_INDEX), Build.VERSION.RELEASE);
+            jsonObj.put(String.valueOf(SDK_INT_INDEX), String.valueOf(Build.VERSION.SDK_INT));
+            jsonObj.put(String.valueOf(PACKAGE_NAME_INDEX), packageName);
+
+            jsonObj.put(String.valueOf(APP_VERSION_CODE_INDEX), "");
+            jsonObj.put(String.valueOf(APP_VERSION_NAME_INDEX), "");
+
+            PackageManager packageManager = context.getPackageManager();
+            if (packageManager != null) {
+                try {
+                    PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
+                    if (packageInfo != null) {
+                        jsonObj.put(String.valueOf(APP_VERSION_CODE_INDEX),
+                                String.valueOf(packageInfo.versionCode));
+                        jsonObj.put(String.valueOf(APP_VERSION_NAME_INDEX), packageInfo.versionName);
+                    }
+                } catch (PackageManager.NameNotFoundException e) {
+                    // ignore and continue without version strings
                 }
-            } catch (PackageManager.NameNotFoundException e) {
-                // ignore and continue without version strings
             }
+
+            jsonObj.put(String.valueOf(CRASH_TIME_INDEX),
+                    String.valueOf(System.currentTimeMillis()));
+            jsonObj.put(String.valueOf(APP_START_TIME_INDEX),
+                    String.valueOf(externalData.appStartTime));
+
+            jsonObj.put(String.valueOf(STACK_TRACE_INDEX), getStackTrace(throwable));
+            jsonObj.put(String.valueOf(STACK_TRACE_HASH_INDEX), getStackTraceHash(throwable));
+
+            jsonObj.put(String.valueOf(PRODUCT_INDEX), Build.PRODUCT);
+            jsonObj.put(String.valueOf(BRAND_INDEX), Build.BRAND);
+
+            jsonObj.put(String.valueOf(DEVICE_ID_INDEX), externalData.deviceId);
+            jsonObj.put(String.valueOf(ACCOUNTS_INDEX), externalData.accounts);
+
+
+        } catch (JSONException e) {
+            // ignore
         }
 
-        data[CRASH_TIME_INDEX] = String.valueOf(System.currentTimeMillis());
-        data[APP_START_TIME_INDEX] = String.valueOf(externalData.appStartTime);
-
-        data[STACK_TRACE_INDEX] = getStackTrace(throwable);
-        data[STACK_TRACE_HASH_INDEX] = getStackTraceHash(throwable);
-
-        data[PRODUCT_INDEX] = Build.PRODUCT;
-        data[BRAND_INDEX] = Build.BRAND;
-
-        data[DEVICE_ID_INDEX] = externalData.deviceId;
-        data[ACCOUNTS_INDEX] = externalData.accounts;
+        return jsonObj;
     }
 
     private String getStackTrace(Throwable th) {
@@ -109,24 +125,6 @@ public class ReportDataCollector {
         }
 
         return Integer.toHexString(res.toString().hashCode());
-    }
-
-    public void printToLogcat() {
-        for (int i = 0; i < DATA_COUNT; i++) {
-            Log.d("ReportDataCollector", "printToLogcat: " + data[i]);
-        }
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-
-        for (int i = 0; i < DATA_COUNT; i++) {
-            builder.append(data[i]);
-            builder.append("\n");
-        }
-
-        return builder.toString();
     }
 
     public static class ExternalData {

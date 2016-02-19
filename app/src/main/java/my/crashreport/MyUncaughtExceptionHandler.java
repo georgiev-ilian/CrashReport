@@ -6,6 +6,8 @@ import android.os.Process;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 /**
  * Created by Ilian Georgiev.
  */
@@ -26,9 +28,9 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
         ReportDataCollector.ExternalData externalData = new ReportDataCollector.ExternalData();
         externalData.appStartTime = appStartTime;
 
-        collector.collect(context, ex, externalData);
+        JSONObject jsonObject = collector.collect(context, ex, externalData);
 
-        collector.printToLogcat();
+        Log.d("MyHandler", jsonObject.toString());
 
         new ToastThread();
 

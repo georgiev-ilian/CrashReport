@@ -8,7 +8,9 @@ import android.app.Application;
 public class MyApplication extends Application {
     @Override
     public void onCreate() {
-        Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler(this));
+        ReportDataCollector.ExternalData externalData = new ReportDataCollector.ExternalData();
+        Thread.setDefaultUncaughtExceptionHandler(
+                new MyUncaughtExceptionHandler(this, externalData));
 
         super.onCreate();
     }

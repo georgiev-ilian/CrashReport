@@ -15,18 +15,18 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
 
     private final Context context;
 
-    private final long appStartTime;
+    private final ReportDataCollector.ExternalData externalData;
 
-    public MyUncaughtExceptionHandler(Context context) {
+    public MyUncaughtExceptionHandler(Context context,
+                                      ReportDataCollector.ExternalData externalData) {
         this.context = context;
-        appStartTime = System.currentTimeMillis();
+        this.externalData = externalData;
+        this.externalData.appStartTime = System.currentTimeMillis();
     }
 
     @Override
     public void uncaughtException(Thread thread, Throwable ex) {
         ReportDataCollector collector = new ReportDataCollector();
-        ReportDataCollector.ExternalData externalData = new ReportDataCollector.ExternalData();
-        externalData.appStartTime = appStartTime;
 
         JSONObject jsonObject = collector.collect(context, ex, externalData);
 

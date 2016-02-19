@@ -58,20 +58,24 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
     private void store(JSONObject data, String fileName) {
 
         OutputStream out = null;
+        OutputStreamWriter writer= null;
         try {
             out = context.openFileOutput(fileName, Context.MODE_PRIVATE);
-            final OutputStreamWriter writer = new OutputStreamWriter(out, "UTF-8");
+            writer = new OutputStreamWriter(out, "UTF-8");
             writer.write(data.toString());
-            writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (out != null) {
-                try {
+            try {
+                if (out != null) {
                     out.close();
-                } catch (IOException e) {
-                    // ignore
                 }
+
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException e) {
+                // ignore
             }
         }
     }

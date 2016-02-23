@@ -11,7 +11,9 @@ public class MyApplication extends Application {
     public void onCreate() {
         ReportDataCollector.ExternalData externalData = new ReportDataCollector.ExternalData();
         Thread.setDefaultUncaughtExceptionHandler(
-                new MyUncaughtExceptionHandler(this, externalData, new Sender() {
+                new MyUncaughtExceptionHandler(this,
+                        Thread.getDefaultUncaughtExceptionHandler(),
+                        externalData, new Sender() {
                     @Override
                     public boolean send(String content) {
                         Log.d("MyApplication", "send: " + content);

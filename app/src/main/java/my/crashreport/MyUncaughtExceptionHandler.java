@@ -24,7 +24,11 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
 
     private final Sender sender;
 
+    // Keep the default handler in case something goes wrong with our handling
+    private final Thread.UncaughtExceptionHandler defaultHandler;
+
     public MyUncaughtExceptionHandler(Context context,
+                                      Thread.UncaughtExceptionHandler defaultHandler,
                                       ReportDataCollector.ExternalData externalData,
                                       Sender sender) {
         this.context = context;
@@ -33,44 +37,52 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
 
         crashReportFinder = new CrashReportFinder(context);
         this.sender = sender;
+
+        this.defaultHandler = defaultHandler;
     }
 
     @Override
     public void uncaughtException(Thread thread, Throwable ex) {
-        ReportDataCollector collector = new ReportDataCollector();
+        try {
+            ReportDataCollector collector = new ReportDataCollector();
 
-        JSONObject jsonObject = collector.collect(context, ex, externalData);
-        String filename = getReportFilename();
+            JSONObject jsonObject = collector.collect(context, ex, externalData);
+            String filename = getReportFilename();
 
-        CrashReportPersister crashReportPersister = new CrashReportPersister(context);
+            CrashReportPersister crashReportPersister = new CrashReportPersister(context);
 
-        // Try to send all report that failed to be send
-        String[] files = crashReportFinder.getCrashReportFiles();
-        String content;
-        for (String fileStored : files) {
-            content = crashReportPersister.load(fileStored);
-            if (sender.send(content)) {
-                context.deleteFile(fileStored);
+            // Try to send all report that failed to be send
+            String[] files = crashReportFinder.getCrashReportFiles();
+            String content;
+            for (String fileStored : files) {
+                content = crashReportPersister.load(fileStored);
+                if (sender.send(content)) {
+                    context.deleteFile(fileStored);
+                }
+            }
+
+            // Try to send the latest report and if failed save it
+            if (!sender.send(jsonObject.toString())) {
+                crashReportPersister.store(jsonObject, filename);
+            }
+
+            new ToastThread();
+
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+
+            Log.e("MyUncaught", ex.getMessage(), ex);
+
+            android.os.Process.killProcess(Process.myPid());
+            System.exit(10);
+        } catch (Throwable th) {
+            if (defaultHandler != null) {
+                defaultHandler.uncaughtException(thread, ex);
             }
         }
-
-        // Try to send the latest report and if failed save it
-        if (!sender.send(jsonObject.toString())) {
-            crashReportPersister.store(jsonObject, filename);
-        }
-
-        new ToastThread();
-
-        try {
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            // ignore
-        }
-
-        Log.e("MyUncaught", ex.getMessage(), ex);
-
-        android.os.Process.killProcess(Process.myPid());
-        System.exit(10);
     }
 
     private String getReportFilename() {

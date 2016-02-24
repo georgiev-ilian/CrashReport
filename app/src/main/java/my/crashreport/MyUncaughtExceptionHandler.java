@@ -27,6 +27,8 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
     // Keep the default handler in case something goes wrong with our handling
     private final Thread.UncaughtExceptionHandler defaultHandler;
 
+    private final CrashReportPersister crashReportPersister;
+
     public MyUncaughtExceptionHandler(Context context,
                                       Thread.UncaughtExceptionHandler defaultHandler,
                                       ReportDataCollector.ExternalData externalData,
@@ -39,6 +41,7 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
         this.sender = sender;
 
         this.defaultHandler = defaultHandler;
+        this.crashReportPersister = new CrashReportPersister(context);
     }
 
     @Override
@@ -49,22 +52,10 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
             JSONObject jsonObject = collector.collect(context, ex, externalData);
             String filename = getReportFilename();
 
-            CrashReportPersister crashReportPersister = new CrashReportPersister(context);
+            // Save current crash report
+            crashReportPersister.store(jsonObject, filename);
 
-            // Try to send all report that failed to be send
-            String[] files = crashReportFinder.getCrashReportFiles();
-            String content;
-            for (String fileStored : files) {
-                content = crashReportPersister.load(fileStored);
-                if (sender.send(content)) {
-                    context.deleteFile(fileStored);
-                }
-            }
-
-            // Try to send the latest report and if failed save it
-            if (!sender.send(jsonObject.toString())) {
-                crashReportPersister.store(jsonObject, filename);
-            }
+            new SendReportThread(filename, sender, jsonObject);
 
             new ToastThread();
 
@@ -101,6 +92,52 @@ public class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandl
             Toast.makeText(context,
                     "An error occurred. Error report has been sent.", Toast.LENGTH_SHORT).show();
             Looper.loop();
+        }
+    }
+
+    private class SendReportThread implements Runnable {
+
+        private final Sender sender;
+        private final String filename;
+        private final JSONObject jsonObject;
+
+        public SendReportThread(String filename, Sender sender, JSONObject jsonObject) {
+            this.sender = sender;
+            this.filename = filename;
+            this.jsonObject = jsonObject;
+
+            new Thread(this).start();
+        }
+
+        @Override
+        public void run() {
+            // Try to send the latest report and if failed save it
+            if (sender.send(jsonObject.toString())) {
+                context.deleteFile(filename);
+
+                // When this is ready send old reports
+                new SendOldReportThread();
+            }
+        }
+    }
+
+    private class SendOldReportThread implements Runnable {
+
+        public SendOldReportThread() {
+            new Thread(this).start();
+        }
+
+        @Override
+        public void run() {
+            // Try to send all report that failed to be send
+            String[] files = crashReportFinder.getCrashReportFiles();
+            String content;
+            for (String fileStored : files) {
+                content = crashReportPersister.load(fileStored);
+                if (sender.send(content)) {
+                    context.deleteFile(fileStored);
+                }
+            }
         }
     }
 }
